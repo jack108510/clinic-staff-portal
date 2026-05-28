@@ -3,19 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rosslyn Staff Portal</title>
+<title>Vet INC | Staff Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#0a0a0a;color:#e5e5e5;min-height:100vh}
-.nav{display:flex;gap:0;border-bottom:1px solid #1a1a1a;background:#0f0f0f;position:sticky;top:0;z-index:50}
-.nav button{flex:1;padding:16px 8px;background:none;border:none;color:#666;font-size:14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
-.nav button.active{color:#10b981;border-bottom-color:#10b981}
-.nav button:hover{color:#999}
+:root{--bg:#09090B;--surface:#18181B;--surface-hover:#27272A;--border:#27272A;--text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;--indigo:#2563eb;--violet:#3b82f6;--lviolet:#60a5fa;--cyan:#93c5fd;--emerald:#10B981;--amber:#F59E0B;--grad:linear-gradient(135deg,#2563eb,#3b82f6,#60a5fa)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg)}
+.logo{font-weight:800;font-size:1.2rem;display:flex;align-items:center;gap:6px;color:var(--text)}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--grad)}
+.logo-sub{font-size:11px;color:var(--text3);font-weight:500;margin-left:8px}
+.nav{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface)}
+.nav button{flex:1;padding:14px 8px;background:none;border:none;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.nav button.active{color:var(--lviolet);border-bottom-color:var(--violet)}
+.nav button:hover{color:var(--text2)}
 .section{display:none;padding:20px;max-width:1200px;margin:0 auto}
 .section.active{display:block}
-h1{font-size:22px;font-weight:700;margin-bottom:20px;color:#fff}
-h2{font-size:16px;font-weight:600;margin-bottom:12px;color:#ccc}
-.card{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:20px;margin-bottom:16px}
+h1{font-size:22px;font-weight:800;margin-bottom:20px;color:var(--text);letter-spacing:-.02em}
+h2{font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase}
 .badge-vet{background:rgba(16,185,129,.15);color:#10b981}
 .badge-tech{background:rgba(59,130,246,.15);color:#3b82f6}
@@ -24,41 +30,43 @@ h2{font-size:16px;font-weight:600;margin-bottom:12px;color:#ccc}
 .badge-mgr{background:rgba(168,85,247,.15);color:#a855f7}
 .badge-omgr{background:rgba(236,72,153,.15);color:#ec4899}
 .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
-.btn-green{background:#10b981;color:#000}
+.btn-green{background:var(--emerald);color:#000}
 .btn-green:hover{background:#059669}
+.btn-grad{background:var(--grad);color:#fff}
+.btn-grad:hover{opacity:.9}
 .btn-red{background:#ef4444;color:#fff}
 .btn-red:hover{background:#dc2626}
-.btn-ghost{background:#1a1a1a;color:#999;border:1px solid #2a2a2a}
-.btn-ghost:hover{color:#fff;border-color:#444}
-select,input{background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;width:100%}
-select:focus,input:focus{outline:none;border-color:#10b981}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text3);background:var(--surface)}
+select,input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;width:100%}
+select:focus,input:focus{outline:none;border-color:var(--violet)}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;border-bottom:1px solid #1e1e1e}
-td{padding:10px 12px;border-bottom:1px solid #141414;font-size:13px}
+th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid rgba(39,39,42,.5);font-size:13px}
 .day-col{min-width:140px}
 .schedule-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 @media(max-width:768px){.schedule-grid{grid-template-columns:repeat(2,1fr)}}
-.day-card{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:12px;min-height:120px}
-.day-card h3{font-size:12px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
-.day-card .day-rev{font-size:11px;color:#10b981;margin-bottom:8px}
-.staff-chip{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin-bottom:4px;border-radius:6px;font-size:12px;background:#1a1a1a}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;min-height:120px}
+.day-card h3{font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.day-card .day-rev{font-size:11px;color:var(--emerald);margin-bottom:8px}
+.staff-chip{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin-bottom:4px;border-radius:6px;font-size:12px;background:rgba(39,39,42,.5)}
 .staff-chip .name{font-weight:500}
 .staff-chip .remove{cursor:pointer;color:#444;font-size:16px;line-height:1}
 .staff-chip .remove:hover{color:#ef4444}
-.add-btn{width:100%;padding:6px;background:none;border:1px dashed #2a2a2a;color:#444;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px}
-.add-btn:hover{border-color:#10b981;color:#10b981}
+.add-btn{width:100%;padding:6px;background:none;border:1px dashed var(--border);color:var(--text3);border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px}
+.add-btn:hover{border-color:var(--violet);color:var(--lviolet)}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:24px;width:90%;max-width:400px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:400px}
 .modal h3{margin-bottom:16px;font-size:16px}
-.modal label{display:block;font-size:12px;color:#666;margin-bottom:4px;margin-top:12px}
+.modal label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px;margin-top:12px}
 .modal .btn-row{display:flex;gap:8px;margin-top:16px}
 .revenue-cell{font-weight:600}
 .rev-green{color:#10b981}
 .rev-red{color:#ef4444}
 .rev-yellow{color:#eab308}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
-.summary-card{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px;text-align:center}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
 .summary-card .value{font-size:28px;font-weight:700;color:#fff;margin:4px 0}
 .summary-card .label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em}
 .timesheet-row{display:grid;grid-template-columns:120px repeat(7,1fr);gap:4px;margin-bottom:4px;font-size:13px;align-items:center}
@@ -73,6 +81,11 @@ td{padding:10px 12px;border-bottom:1px solid #141414;font-size:13px}
 </style>
 </head>
 <body>
+
+<div class="topbar">
+<div class="logo"><div class="logo-dot"></div>Vet INC<span class="logo-sub">Staff Portal</span></div>
+<div style="font-size:12px;color:var(--text3)">Rosslyn Veterinary Clinic</div>
+</div>
 
 <div class="nav">
 <button class="active" onclick="showTab('schedule')">Schedule</button>

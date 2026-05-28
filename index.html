@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rosslyn Staff Portal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#0a0a0a;color:#e5e5e5;min-height:100vh}
+.nav{display:flex;gap:0;border-bottom:1px solid #1a1a1a;background:#0f0f0f;position:sticky;top:0;z-index:50}
+.nav button{flex:1;padding:16px 8px;background:none;border:none;color:#666;font-size:14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.nav button.active{color:#10b981;border-bottom-color:#10b981}
+.nav button:hover{color:#999}
+.section{display:none;padding:20px;max-width:1200px;margin:0 auto}
+.section.active{display:block}
+h1{font-size:22px;font-weight:700;margin-bottom:20px;color:#fff}
+h2{font-size:16px;font-weight:600;margin-bottom:12px;color:#ccc}
+.card{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:20px;margin-bottom:16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase}
+.badge-vet{background:rgba(16,185,129,.15);color:#10b981}
+.badge-tech{background:rgba(59,130,246,.15);color:#3b82f6}
+.badge-recp{background:rgba(234,179,8,.15);color:#eab308}
+.badge-asst{background:rgba(249,115,22,.15);color:#f97316}
+.badge-mgr{background:rgba(168,85,247,.15);color:#a855f7}
+.badge-omgr{background:rgba(236,72,153,.15);color:#ec4899}
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-green{background:#10b981;color:#000}
+.btn-green:hover{background:#059669}
+.btn-red{background:#ef4444;color:#fff}
+.btn-red:hover{background:#dc2626}
+.btn-ghost{background:#1a1a1a;color:#999;border:1px solid #2a2a2a}
+.btn-ghost:hover{color:#fff;border-color:#444}
+select,input{background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;width:100%}
+select:focus,input:focus{outline:none;border-color:#10b981}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;border-bottom:1px solid #1e1e1e}
+td{padding:10px 12px;border-bottom:1px solid #141414;font-size:13px}
+.day-col{min-width:140px}
+.schedule-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+@media(max-width:768px){.schedule-grid{grid-template-columns:repeat(2,1fr)}}
+.day-card{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:12px;min-height:120px}
+.day-card h3{font-size:12px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.day-card .day-rev{font-size:11px;color:#10b981;margin-bottom:8px}
+.staff-chip{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin-bottom:4px;border-radius:6px;font-size:12px;background:#1a1a1a}
+.staff-chip .name{font-weight:500}
+.staff-chip .remove{cursor:pointer;color:#444;font-size:16px;line-height:1}
+.staff-chip .remove:hover{color:#ef4444}
+.add-btn{width:100%;padding:6px;background:none;border:1px dashed #2a2a2a;color:#444;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px}
+.add-btn:hover{border-color:#10b981;color:#10b981}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:24px;width:90%;max-width:400px}
+.modal h3{margin-bottom:16px;font-size:16px}
+.modal label{display:block;font-size:12px;color:#666;margin-bottom:4px;margin-top:12px}
+.modal .btn-row{display:flex;gap:8px;margin-top:16px}
+.revenue-cell{font-weight:600}
+.rev-green{color:#10b981}
+.rev-red{color:#ef4444}
+.rev-yellow{color:#eab308}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.summary-card{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px;text-align:center}
+.summary-card .value{font-size:28px;font-weight:700;color:#fff;margin:4px 0}
+.summary-card .label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em}
+.timesheet-row{display:grid;grid-template-columns:120px repeat(7,1fr);gap:4px;margin-bottom:4px;font-size:13px;align-items:center}
+.timesheet-row.header{color:#666;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.timesheet-row input{padding:6px;text-align:center;font-size:12px}
+.week-nav{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.week-nav span{font-size:14px;color:#999}
+.pill{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.pill-pending{background:rgba(234,179,8,.15);color:#eab308}
+.pill-approved{background:rgba(16,185,129,.15);color:#10b981}
+.pill-rejected{background:rgba(239,68,68,.15);color:#ef4444}
+</style>
+</head>
+<body>
+
+<div class="nav">
+<button class="active" onclick="showTab('schedule')">Schedule</button>
+<button onclick="showTab('timesheets')">Timesheets</button>
+<button onclick="showTab('payroll')">Payroll</button>
+<button onclick="showTab('revenue')">Revenue</button>
+</div>
+
+<div id="schedule" class="section active">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+<h1>Weekly Schedule</h1>
+<div class="week-nav">
+<button class="btn btn-ghost" onclick="changeWeek(-1)">&larr;</button>
+<span id="weekLabel"></span>
+<button class="btn btn-ghost" onclick="changeWeek(1)">&rarr;</button>
+</div>
+</div>
+<div id="scheduleGrid" class="schedule-grid"></div>
+</div>
+
+<div id="timesheets" class="section">
+<h1>Submit Timesheet</h1>
+<div class="card">
+<label style="display:block;font-size:12px;color:#666;margin-bottom:6px">Select Staff</label>
+<select id="tsStaff" onchange="loadTimesheet()"><option value="">Choose...</option></select>
+<div style="margin-top:16px" id="tsGrid"></div>
+<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+<span id="tsTotal" style="font-size:14px;color:#999"></span>
+<button class="btn btn-green" onclick="submitTimesheet()">Submit for Approval</button>
+</div>
+</div>
+<h2 style="margin-top:24px">Pending Approval</h2>
+<div id="pendingList"></div>
+</div>
+
+<div id="payroll" class="section">
+<h1>Payroll</h1>
+<div id="payrollContent"></div>
+</div>
+
+<div id="revenue" class="section">
+<h1>Revenue vs Staffing</h1>
+<div id="revenueContent"></div>
+</div>
+
+<div class="modal-overlay" id="addStaffModal">
+<div class="modal">
+<h3>Add Staff to Shift</h3>
+<p style="font-size:13px;color:#666;margin-bottom:12px" id="modalDay"></p>
+<select id="modalStaff"></select>
+<div class="btn-row">
+<button class="btn btn-ghost" onclick="closeModal()" style="flex:1">Cancel</button>
+<button class="btn btn-green" onclick="confirmAddStaff()" style="flex:1">Add</button>
+</div>
+</div>
+</div>
+
+<script>
+const STAFF=[
+{id:1,name:'Scott Wilde',role:'Manager',rate:45,color:'#a855f7',badge:'badge-mgr'},
+{id:2,name:'Tammy Wilde',role:'Veterinarian',rate:85,color:'#10b981',badge:'badge-vet'},
+{id:3,name:'Kayla Bilsborrow',role:'Veterinarian',rate:80,color:'#10b981',badge:'badge-vet'},
+{id:4,name:'Vicki Janes',role:'Veterinarian',rate:78,color:'#10b981',badge:'badge-vet'},
+{id:5,name:'Terra MacDonald',role:'Veterinarian',rate:75,color:'#10b981',badge:'badge-vet'},
+{id:6,name:'Sarah K.',role:'Vet Tech',rate:28,color:'#3b82f6',badge:'badge-tech'},
+{id:7,name:'Mike J.',role:'Vet Tech',rate:30,color:'#3b82f6',badge:'badge-tech'},
+{id:8,name:'Amy L.',role:'Receptionist',rate:22,color:'#eab308',badge:'badge-recp'},
+{id:9,name:'Dave R.',role:'Vet Assistant',rate:24,color:'#f97316',badge:'badge-asst'},
+{id:10,name:'Kate T.',role:'Office Manager',rate:32,color:'#ec4899',badge:'badge-omgr'}
+];
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+let currentWeekStart=getMonday(new Date());
+let currentModalDay=null;
+
+function getMonday(d){d=new Date(d);const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);return new Date(d.setDate(diff))}
+function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function dateKey(d){return d.toISOString().split('T')[0]}
+
+function load(){
+const sched=JSON.parse(localStorage.getItem('rosslyn_schedule')||'{}');
+const ts=JSON.parse(localStorage.getItem('rosslyn_timesheets')||'[]');
+return{schedule:sched,timesheets:ts};
+}
+function saveSchedule(s){localStorage.setItem('rosslyn_schedule',JSON.stringify(s))}
+function saveTimesheets(t){localStorage.setItem('rosslyn_timesheets',JSON.stringify(t))}
+
+function showTab(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
+if(id==='payroll')renderPayroll();
+if(id==='revenue')renderRevenue();
+if(id==='timesheets')renderPending();
+}
+
+function changeWeek(dir){
+currentWeekStart=new Date(currentWeekStart);
+currentWeekStart.setDate(currentWeekStart.getDate()+dir*7);
+renderSchedule();
+}
+
+function renderSchedule(){
+const{schedule}=load();
+const label=`${fmt(currentWeekStart)} - ${fmt(new Date(currentWeekStart.getTime()+6*864e5))}`;
+document.getElementById('weekLabel').textContent=label;
+const grid=document.getElementById('scheduleGrid');
+grid.innerHTML='';
+for(let i=0;i<7;i++){
+const day=new Date(currentWeekStart.getTime()+i*864e5);
+const key=dateKey(day);
+const assigned=schedule[key]||[];
+const card=document.createElement('div');
+card.className='day-card';
+card.innerHTML=`<h3>${DAYS[i]} ${fmt(day)}</h3><div id="chips-${key}"></div><button class="add-btn" onclick="openAddModal('${key}','${DAYS[i]} ${fmt(day)}')">+ Add</button>`;
+grid.appendChild(card);
+const chips=card.querySelector(`#chips-${key}`);
+assigned.forEach(sid=>{
+const s=STAFF.find(x=>x.id===sid);
+if(!s)return;
+const chip=document.createElement('div');
+chip.className='staff-chip';
+chip.innerHTML=`<span class="badge ${s.badge}" style="margin-right:6px;font-size:9px">${s.role}</span><span class="name">${s.name.split(' ')[0]}</span><span class="remove" onclick="removeStaff('${key}',${sid})">&times;</span>`;
+chips.appendChild(chip);
+});
+}
+}
+
+function openAddModal(dayKey,dayLabel){
+currentModalDay=dayKey;
+document.getElementById('modalDay').textContent=dayLabel;
+const{schedule}=load();
+const assigned=schedule[dayKey]||[];
+const sel=document.getElementById('modalStaff');
+sel.innerHTML='';
+STAFF.filter(s=>!assigned.includes(s.id)).forEach(s=>{
+sel.innerHTML+=`<option value="${s.id}">${s.name} (${s.role})</option>`;
+});
+document.getElementById('addStaffModal').classList.add('show');
+}
+function closeModal(){document.getElementById('addStaffModal').classList.remove('show')}
+function confirmAddStaff(){
+const sid=parseInt(document.getElementById('modalStaff').value);
+if(!sid)return;
+const{schedule}=load();
+if(!schedule[currentModalDay])schedule[currentModalDay]=[];
+schedule[currentModalDay].push(sid);
+saveSchedule(schedule);
+closeModal();
+renderSchedule();
+}
+function removeStaff(dayKey,sid){
+const{schedule}=load();
+schedule[dayKey]=(schedule[dayKey]||[]).filter(id=>id!==sid);
+saveSchedule(schedule);
+renderSchedule();
+}
+
+// TIMESHEETS
+function initTsStaff(){
+const sel=document.getElementById('tsStaff');
+STAFF.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name} (${s.role} - $${s.rate}/hr)</option>`);
+}
+function loadTimesheet(){
+const sid=parseInt(document.getElementById('tsStaff').value);
+if(!sid){document.getElementById('tsGrid').innerHTML='';document.getElementById('tsTotal').textContent='';return}
+const s=STAFF.find(x=>x.id===sid);
+let html='<div class="timesheet-row header"><div></div>';
+for(let i=0;i<7;i++)html+=`<div>${DAYS[i]}</div>`;
+html+='</div><div class="timesheet-row"><div style="font-weight:600">Hours</div>';
+for(let i=0;i<7;i++)html+=`<div><input type="number" id="ts_h${i}" min="0" max="24" step="0.5" value="0" oninput="calcTsTotal(${sid})"></div>`;
+html+='</div>';
+document.getElementById('tsGrid').innerHTML=html;
+calcTsTotal(sid);
+}
+function calcTsTotal(sid){
+const s=STAFF.find(x=>x.id===sid);
+let total=0;
+for(let i=0;i<7;i++){const v=parseFloat(document.getElementById('ts_h'+i)?.value||0);total+=v}
+const pay=total*s.rate;
+document.getElementById('tsTotal').innerHTML=`<strong>${total} hrs</strong> &times; $${s.rate}/hr = <strong style="color:#10b981">$${pay.toFixed(2)}</strong>`;
+}
+function submitTimesheet(){
+const sid=parseInt(document.getElementById('tsStaff').value);
+if(!sid)return;
+const hours=[];
+for(let i=0;i<7;i++)hours.push(parseFloat(document.getElementById('ts_h'+i)?.value||0));
+const total=hours.reduce((a,b)=>a+b,0);
+if(total===0)return;
+const{timesheets}=load();
+timesheets.push({id:Date.now(),staffId:sid,weekStart:dateKey(currentWeekStart),hours,total,status:'pending',submittedAt:new Date().toISOString()});
+saveTimesheets(timesheets);
+document.getElementById('tsStaff').value='';
+document.getElementById('tsGrid').innerHTML='';
+document.getElementById('tsTotal').textContent='';
+renderPending();
+alert('Timesheet submitted!');
+}
+function renderPending(){
+const{timesheets}=load();
+const pending=timesheets.filter(t=>t.status==='pending');
+const el=document.getElementById('pendingList');
+if(!pending.length){el.innerHTML='<p style="color:#666;font-size:13px">No pending timesheets</p>';return}
+let html='<table><tr><th>Staff</th><th>Week</th><th>Hours</th><th>Pay</th><th>Action</th></tr>';
+pending.forEach(t=>{
+const s=STAFF.find(x=>x.id===t.staffId);
+const pay=t.total*s.rate;
+html+=`<tr><td>${s.name}</td><td>${t.weekStart}</td><td>${t.total}</td><td>$${pay.toFixed(2)}</td><td><button class="btn btn-green" style="padding:4px 10px;font-size:11px" onclick="approveTs(${t.id})">Approve</button> <button class="btn btn-red" style="padding:4px 10px;font-size:11px" onclick="rejectTs(${t.id})">Reject</button></td></tr>`;
+});
+html+='</table>';
+el.innerHTML=html;
+}
+function approveTs(id){const{timesheets}=load();const t=timesheets.find(x=>x.id===id);if(t)t.status='approved';saveTimesheets(timesheets);renderPending();renderPayroll()}
+function rejectTs(id){const{timesheets}=load();const t=timesheets.find(x=>x.id===id);if(t)t.status='rejected';saveTimesheets(timesheets);renderPending()}
+
+// PAYROLL
+function renderPayroll(){
+const{timesheets}=load();
+const approved=timesheets.filter(t=>t.status==='approved');
+let html='<div class="summary-grid"><div class="summary-card"><div class="label">Staff</div><div class="value">'+STAFF.length+'</div></div>';
+let totalPay=0;
+const staffPay={};
+STAFF.forEach(s=>{
+const ts=approved.filter(t=>t.staffId===s.id);
+const hrs=ts.reduce((a,t)=>a+t.total,0);
+const pay=hrs*s.rate;
+staffPay[s.id]={hrs,pay};
+totalPay+=pay;
+});
+html+=`<div class="summary-card"><div class="label">Total Payroll</div><div class="value rev-red">$${totalPay.toFixed(0)}</div></div>`;
+html+=`<div class="summary-card"><div class="label">Avg Cost/Staff</div><div class="value">$${(totalPay/STAFF.length).toFixed(0)}</div></div></div>`;
+html+='<div class="card"><table><tr><th>Staff</th><th>Role</th><th>Rate</th><th>Hours</th><th>Gross Pay</th></tr>';
+STAFF.forEach(s=>{
+const p=staffPay[s.id];
+html+=`<tr><td>${s.name}</td><td><span class="badge ${s.badge}">${s.role}</span></td><td>$${s.rate}/hr</td><td>${p.hrs}</td><td style="font-weight:600">$${p.pay.toFixed(2)}</td></tr>`;
+});
+html+=`<tr style="border-top:2px solid #1e1e1e"><td colspan="4" style="font-weight:700;color:#fff">Total</td><td style="font-weight:700;color:#ef4444">$${totalPay.toFixed(2)}</td></tr>`;
+html+='</table></div>';
+document.getElementById('payrollContent').innerHTML=html;
+}
+
+// REVENUE
+function renderRevenue(){
+const{schedule}=load();
+let html='<div class="summary-grid">';
+let weekRev=0,weekPay=0;
+const dayData=[];
+for(let i=0;i<7;i++){
+const day=new Date(currentWeekStart.getTime()+i*864e5);
+const key=dateKey(day);
+const assigned=(schedule[key]||[]).map(id=>STAFF.find(s=>s.id===id)).filter(Boolean);
+const dayPay=assigned.reduce((a,s)=>a+(s.rate*8),0);
+const rev=Math.floor(3000+Math.random()*4000);
+weekRev+=rev;weekPay+=dayPay;
+dayData.push({day:DAYS[i],date:fmt(day),rev,pay:dayPay,net:rev-dayPay,staff:assigned});
+}
+const margin=weekRev>0?((weekRev-weekPay)/weekRev*100):0;
+const mClass=margin>40?'rev-green':margin>20?'rev-yellow':'rev-red';
+html+=`<div class="summary-card"><div class="label">Week Revenue</div><div class="value rev-green">$${weekRev.toLocaleString()}</div></div>`;
+html+=`<div class="summary-card"><div class="label">Week Payroll</div><div class="value rev-red">$${weekPay.toLocaleString()}</div></div>`;
+html+=`<div class="summary-card"><div class="label">Net Margin</div><div class="value ${mClass}">${margin.toFixed(1)}%</div></div>`;
+html+=`<div class="summary-card"><div class="label">Net Profit</div><div class="value ${weekRev-weekPay>0?'rev-green':'rev-red'}">$${(weekRev-weekPay).toLocaleString()}</div></div></div>`;
+html+='<div class="card"><table><tr><th>Day</th><th>Revenue</th><th>Staff</th><th>Payroll Cost</th><th>Net</th><th>Status</th></tr>';
+dayData.forEach(d=>{
+const cls=d.net>2000?'rev-green':d.net>0?'rev-yellow':'rev-red';
+const status=d.net/d.rev>0.4?'Healthy':d.net/d.rev>0.2?'Tight':'Loss';
+html+=`<tr><td><strong>${d.day}</strong><br><span style="color:#666;font-size:11px">${d.date}</span></td><td class="revenue-cell rev-green">$${d.rev.toLocaleString()}</td><td>${d.staff.map(s=>'<span style="color:'+s.color+'">'+s.name.split(' ')[0]+'</span>').join(', ')||'<span style="color:#444">None</span>'}</td><td>$${d.pay.toLocaleString()}</td><td class="revenue-cell ${cls}">$${d.net.toLocaleString()}</td><td><span class="pill pill-${status==='Healthy'?'approved':status==='Tight'?'pending':'rejected'}">${status}</span></td></tr>`;
+});
+html+='</table></div>';
+document.getElementById('revenueContent').innerHTML=html;
+}
+
+initTsStaff();renderSchedule();
+</script>
+</body>
+</html>

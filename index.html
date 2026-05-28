@@ -91,6 +91,7 @@ td{padding:10px 12px;border-bottom:1px solid rgba(39,39,42,.5);font-size:13px}
 <button class="active" onclick="showTab('schedule')">Schedule</button>
 <button onclick="showTab('timesheets')">Timesheets</button>
 <button onclick="showTab('payroll')">Payroll</button>
+<button onclick="showTab('timeoff')">Time Off</button>
 <button onclick="showTab('revenue')">Revenue</button>
 </div>
 
@@ -124,6 +125,27 @@ td{padding:10px 12px;border-bottom:1px solid rgba(39,39,42,.5);font-size:13px}
 <div id="payroll" class="section">
 <h1>Payroll</h1>
 <div id="payrollContent"></div>
+</div>
+
+<div id="timeoff" class="section">
+<h1>Time Off Requests</h1>
+<div class="card">
+<h2 style="margin-bottom:12px">Request Time Off</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+<div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Staff Member</label><select id="toStaff"></select></div>
+<div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Type</label><select id="toType"><option value="vacation">Vacation</option><option value="sick">Sick Day</option><option value="personal">Personal</option><option value="stat">Stat Holiday</option><option value="unpaid">Unpaid Leave</option></select></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+<div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Start Date</label><input type="date" id="toStart"></div>
+<div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">End Date</label><input type="date" id="toEnd"></div>
+</div>
+<div><label style="display:block;font-size:12px;color:var(--text3);margin-bottom:4px">Notes</label><input type="text" id="toNotes" placeholder="Optional notes..."></div>
+<div style="margin-top:12px"><button class="btn btn-grad" onclick="submitTimeOff()">Submit Request</button></div>
+</div>
+<h2>Pending Requests</h2>
+<div id="pendingTimeOff"></div>
+<h2 style="margin-top:20px">Approved Time Off</h2>
+<div id="approvedTimeOff"></div>
 </div>
 
 <div id="revenue" class="section">
@@ -359,7 +381,61 @@ html+='</table></div>';
 document.getElementById('revenueContent').innerHTML=html;
 }
 
-initTsStaff();renderSchedule();
+// TIME OFF
+function initToStaff(){
+const sel=document.getElementById('toStaff');
+STAFF.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`);
+}
+function loadTimeOff(){return JSON.parse(localStorage.getItem('rosslyn_timeoff')||'[]')}
+function saveTimeOff(t){localStorage.setItem('rosslyn_timeoff',JSON.stringify(t))}
+function submitTimeOff(){
+const sid=parseInt(document.getElementById('toStaff').value);
+const type=document.getElementById('toType').value;
+const start=document.getElementById('toStart').value;
+const end=document.getElementById('toEnd').value;
+const notes=document.getElementById('toNotes').value;
+if(!sid||!start||!end){alert('Fill in all required fields');return}
+const reqs=loadTimeOff();
+reqs.push({id:Date.now(),staffId:sid,type,start,end,notes,status:'pending',submittedAt:new Date().toISOString()});
+saveTimeOff(reqs);
+document.getElementById('toStart').value='';
+document.getElementById('toEnd').value='';
+document.getElementById('toNotes').value='';
+renderTimeOff();
+alert('Request submitted!');
+}
+function renderTimeOff(){
+const reqs=loadTimeOff();
+const pending=reqs.filter(r=>r.status==='pending').sort((a,b)=>new Date(a.start)-new Date(b.start));
+const approved=reqs.filter(r=>r.status==='approved').sort((a,b)=>new Date(b.start)-new Date(a.start));
+const typeLabel={vacation:'Vacation',sick:'Sick Day',personal:'Personal',stat:'Stat Holiday',unpaid:'Unpaid Leave'};
+const typePill={vacation:'pending',sick:'rejected',personal:'pending',stat:'approved',unpaid:'pending'};
+let ph='<table><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Notes</th><th>Action</th></tr>';
+if(!pending.length)ph+='<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">No pending requests</td></tr>';
+pending.forEach(r=>{
+const s=STAFF.find(x=>x.id===r.staffId);
+ph+=`<tr><td>${s?.name||'Unknown'}</td><td><span class="pill pill-${typePill[r.type]||'pending'}">${typeLabel[r.type]||r.type}</span></td><td>${r.start} → ${r.end}</td><td style="color:var(--text3)">${r.notes||'-'}</td><td><button class="btn btn-green" style="padding:4px 10px;font-size:11px" onclick="actTimeOff(${r.id},'approved')">Approve</button> <button class="btn btn-red" style="padding:4px 10px;font-size:11px" onclick="actTimeOff(${r.id},'rejected')">Deny</button></td></tr>`;
+});
+ph+='</table>';
+document.getElementById('pendingTimeOff').innerHTML=ph;
+let ah='<table><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Notes</th><th>Status</th></tr>';
+if(!approved.length)ah+='<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">No approved requests</td></tr>';
+approved.forEach(r=>{
+const s=STAFF.find(x=>x.id===r.staffId);
+ah+=`<tr><td>${s?.name||'Unknown'}</td><td><span class="pill pill-${typePill[r.type]||'pending'}">${typeLabel[r.type]||r.type}</span></td><td>${r.start} → ${r.end}</td><td style="color:var(--text3)">${r.notes||'-'}</td><td><span class="pill pill-approved">Approved</span></td></tr>`;
+});
+ah+='</table>';
+document.getElementById('approvedTimeOff').innerHTML=ah;
+}
+function actTimeOff(id,status){
+const reqs=loadTimeOff();
+const r=reqs.find(x=>x.id===id);
+if(r)r.status=status;
+saveTimeOff(reqs);
+renderTimeOff();
+}
+
+initToStaff();renderSchedule();renderTimeOff();
 </script>
 </body>
 </html>
